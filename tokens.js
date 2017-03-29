@@ -9,10 +9,11 @@
 
 // Comments are ignored.
 
-RegExp.prototype.bexec = function(str) { //Creo que esta bien
-  var ultimoMatch = this.lastIndex;
-  var match = this.exec(this);
-  if(match && ultimoMatch == match.index){ return match }
+RegExp.prototype.bexec = function(str) {
+  var ind = this.lastIndex;
+  var mat = this.exec(str);
+  if (mat && mat.index == ind)
+    return mat;
   return null;
 }
 
@@ -22,16 +23,16 @@ String.prototype.tokens = function () {
     let n;                      // The number value.
     let m;                      // Matching
     let result = [];            // An array to hold the results.
-    
+
     const WHITES              = /\s+/g;
     const ID                  = /[a-zA-Z_]\w*/g;
-    const NUM                 = /\d+/g;
-    const STRING              = /('(\\.|[^'])*'|"(\\.|[^"])*")/g;
+    const NUM                 = /\b\d+(\.\d+)?([eE][+-]?\d+)?\b/g;
+    const STRING              = /('(\\.|[^'])*')|("(\\.|[^"])*")/g;
     const ONELINECOMMENT      = /\/\/.*/g;
-    const MULTIPLELINECOMMENT = /\/[*](.|\n)*?[*]\//g;
-    const TWOCHAROPERATORS    = />=|<=|==|<>|!=|--|\+\+|&&|\|\||\+=|-=/g;
-    const ONECHAROPERATORS    = /([-+*\/=()&|;:,<>{}[\]])/g; //Comprobar
-    const tokens = [WHITES, ID, NUM, STRING, ONELINECOMMENT, 
+    const MULTIPLELINECOMMENT = /\/\*(.|\n)*?\*\//g;
+    const TWOCHAROPERATORS    = /(===|!==|[+][+=]|-[-=]|=[=<>]|[<>][=<>]|&&|[|][|])/g;
+    const ONECHAROPERATORS    = /([-+*\/=()&|;:,<>{}[\]])/g;
+    const tokens = [WHITES, ID, NUM, STRING, ONELINECOMMENT,
                   MULTIPLELINECOMMENT, TWOCHAROPERATORS, ONECHAROPERATORS ];
 
 
@@ -52,22 +53,22 @@ String.prototype.tokens = function () {
     };
 
     // Begin tokenization. If the source string is empty, return nothing.
-    if (!this) return; 
+    if (!this) return;
 
     // Loop through this text
     while (i < this.length) {
-        tokens.forEach( function(token){ token.lastIndex = i;}); // Synchronize lastIndex for all regexp
+        tokens.forEach(function(f) {f.lastIndex = i;}); // Synchronize lastIndex for all regexp
         from = i;
         // Ignore whitespace and comments
-        if (m = WHITES.bexec(this) || 
-           (m = ONELINECOMMENT.bexec(this))  || 
+        if (m = WHITES.bexec(this) ||
+           (m = ONELINECOMMENT.bexec(this))  ||
            (m = MULTIPLELINECOMMENT.bexec(this))) { getTok(); }
         // name.
         else if (m = ID.bexec(this)) {
-            result.push(make('name', getTok())); //Esto también
-        } 
+            result.push(make('name', getTok()));
+        }
         // number.
-        else if (m = NUM.bexec(this)) { //Esto también
+        else if (m = NUM.bexec(this)) {
             n = +getTok();
 
             if (isFinite(n)) {
@@ -75,11 +76,11 @@ String.prototype.tokens = function () {
             } else {
                 make('number', m[0]).error("Bad number");
             }
-        } 
+        }
         // string
         else if (m = STRING.bexec(this)) {
-            result.push(make('string', getTok().replace(/^("|')|("|')$/g,''))); //Esto también
-        } 
+            result.push(make ('string', getTok().replace(/^["']["']$/g,'')));
+        }
         // two char operator
         else if (m = TWOCHAROPERATORS.bexec(this)) {
             result.push(make('operator', getTok()));
